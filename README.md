@@ -1,1 +1,1 @@
-# Four-In-A-Line
+# Four In A Line
