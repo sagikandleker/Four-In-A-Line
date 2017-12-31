@@ -5,26 +5,20 @@
 #include <string.h>
 #include <stdbool.h>
 #include <limits.h>
+#define ROWS 6
+#define COLUMS 7
 #define YEL  "\x1B[33m"
 #define RED  "\x1B[31m"
 #define BLU  "\x1B[34m"
 #define RESET "\x1B[0m"
 
-//TODO -> 
-// if input is no integer (Invalid input, bye-bye!)
-// if input is 1.4 (for example) put to 1 and after that exit(1) with ERROR to "."
-
-char cells[] = {'1',' ','2',' ','3',' ','4',' ','5',' ','6',' ','7'};
-char matrix[6][7];
+char matrix[ROWS][COLUMS];
 char playerFlag;
-char colorFlag;
 bool end = false;
 int colum;
-Stack playersMoves;
 int temprow;
-int movesCounter = 0;
 int flagWinner = 0;
-
+Stack playersMoves;
 
 void main()
 {
@@ -41,7 +35,6 @@ void main()
             printf("It's a tie!");
             exit(1);
         }
-    
         printMatrix();
         PlayerX();
         printMatrix();
@@ -50,24 +43,23 @@ void main()
     }
 }
 
+//X's turn
 void PlayerX(){
 
         printf("Player X, please enter a column number (or 0 to undo): ");
         playerFlag = 'X';
-        scanf("%d", &colum);
-        printf("\n");
-        put(colum);
+        put();
 }
 
+//Y's turn
 void PlayerO(){
 
         printf("Player O, please enter a column number (or 0 to undo): ");
         playerFlag = 'O';
-        scanf("%d", &colum);
-        printf("\n");
-        put(colum);
+        put();
 }
 
+// Print the Matrix.
 void printMatrix()
 {
      for(int i = 0; i < 6; i++)
@@ -94,16 +86,21 @@ void printMatrix()
         printf("\n");
      }
     
-    printf(" %s\n\n", cells,"\n");
+    printf(" 1 2 3 4 5 6 7\n");
+
 }
 
-void put(int colum)
+// Give to the players put the coins.
+void put()
 {
-    if(colum == -1)
+ 
+    if(scanf("%d", &colum) != 1)
     {
-        exit(1);
+            printf("\nInvalid input, bye-bye!");
+            exit(1);
     }
     
+    // Send to undo function if player choose '0'.
     else if(colum == 0)
     {
         if(Stack_Top(&playersMoves) != -1)
@@ -114,26 +111,24 @@ void put(int colum)
         else
         {
             printf("Board is empty - can't undo! Please choose another colum: \n");
-            scanf("%d", &colum);
-            put(colum);
-        }
-        
+            put();
+        }   
     }
 
-    else if(colum >= 1 && colum<= 7)
-
+    else if(colum >= 1 && colum <= 7)
     {
 
         for(int i = 5; i > -1; i--)
-        {       
+        {  
              
             if(matrix[i][colum-1] != 'X' && matrix[i][colum-1] != 'O')
             { 
                 matrix[i][colum-1] = playerFlag;
                 Stack_Push(&playersMoves, colum);
-                movesCounter++;
-                if(movesCounter > 6)
+
+                if((Stack_Size(&playersMoves)) > 6)
                 {
+
                     temprow = i;
                     gameOver();
                 }
@@ -143,8 +138,7 @@ void put(int colum)
             if(matrix[0][colum-1] == 'X' || matrix[0][colum-1] == 'O')
             {
                 printf("Invalid input, this column is full. Please choose another one: "); 
-                scanf("%d", &colum);
-                put(colum);
+                put();
                 break;
             }      
         }
@@ -152,86 +146,116 @@ void put(int colum)
     else
     {
         printf("Invalid input, the number must be between 1 to 7: ");
-        scanf("%d", &colum);
-        put(colum);
+
+        put();
+        
     }
 }
 
-void undo(int delete)
+// Undo function to get back to the last situation. (When player do '0').
+void undo(int pull)
 {
      for(int i = 0; i < 6; i++)
         {       
              
-            if(matrix[i][delete-1] == 'X' || matrix[i][delete-1] == 'O')
+            if(matrix[i][pull-1] == 'X' || matrix[i][pull-1] == 'O')
             { 
-                matrix[i][delete-1] = ' ';
+                matrix[i][pull-1] = ' ';
                 break;
             }
         }
 }
 
+// Check if the game is finished (The function going from the last coin and check all the sides).
 void gameOver()
 {
 
-    // Right
-   for(int i = colum; i < colum+3 ;i++)
-    {
-        if (matrix[temprow][colum-1] != matrix[temprow][i] || i == 7 || i == -1) break;
-        flagWinner++; 
-    }
-    Winner();
-                  
-    // Left
-    for(int i = colum-2; i > colum-5 ;i--)
-    {
-        if (matrix[temprow][colum-1] != matrix[temprow][i] || i == 7 || i == -1) break;
-        flagWinner++;
-    }
-    Winner();
+    gameOver_Down();
+    gameOver_Diagonal_TopRight_DownLeft();
+    gameOver_Diagonal_TopLeft_DownRight();
+    gameOver_Right_Left();
 
-    // Down
+}
+
+void gameOver_Down()
+{
+
     for(int i = temprow+1; i < temprow+4; i++)
     {
         if (matrix[temprow][colum-1] != matrix[i][colum-1] || i == 6) break;
-        flagWinner++;
-    }
-
-    // Diagonal top right.
-    for(int i = temprow-1, j = colum; i > temprow-4, j < colum+3; i--, j++)
-    {
-        if (matrix[temprow][colum-1] != matrix[i][j] || i == 6 || j ==7) break;
-        flagWinner++;
+        else 
+            flagWinner++;
     }
     Winner();
-
-     // Diagonal top left.
-    for(int i = temprow-1, j = colum-2; i > temprow-4, j > colum-5; i--, j--)
-    {
-        if (matrix[temprow][colum-1] != matrix[i][j] || i == 6 || j ==7) break;
-        flagWinner++;
-    }
-    Winner();
-
-    // Diagonal down left.
-    for(int i = temprow+1, j = colum-2; i < temprow+4, j > colum-5; i++, j--)
-    {
-        if (matrix[temprow][colum-1] != matrix[i][j] || i == 6 || j ==7) break;
-        flagWinner++;
-    }
-    Winner();
-
-    // Diagonal down right.
-    for(int i = temprow+1, j = colum; i < temprow+4, j < colum+3; i++, j++)
-    {
-        if (matrix[temprow][colum-1] != matrix[i][j] || i == 6 || j ==7) break;
-        flagWinner++;
-    }
-    Winner(); 
 }
 
+void gameOver_Diagonal_TopRight_DownLeft()
+{
+
+for(int i = temprow+1, j = colum-2; i < temprow+4, j > colum-5; i++, j--)
+    {
+        if (matrix[temprow][colum-1] != matrix[i][j] || i == 6 || j == -1) break;
+        else
+            flagWinner++;    
+    }
+
+for(int i = temprow-1, j = colum; i > temprow-4, j < colum+3; i--, j++)
+    {
+        if (matrix[temprow][colum-1] != matrix[i][j] || i == -1 || j == 7) break;
+        else
+            flagWinner++;
+        
+    }
+
+    Winner();
+}
+
+void gameOver_Diagonal_TopLeft_DownRight()
+{
+
+    for(int i = temprow+1, j = colum; i < temprow+4, j < colum+3; i++, j++)
+    {
+          if (matrix[temprow][colum-1] != matrix[i][j] || i == 6 || j == 7) break;
+          else
+            flagWinner++;
+    }
+
+    for(int i = temprow-1, j = colum-2; i > temprow-4, j > colum-5; i--, j--)
+    {
+        if (matrix[temprow][colum-1] != matrix[i][j] || i == -1 || j == -1) break;
+        else
+            flagWinner++;
+    }
+
+    Winner();
+}
+
+void gameOver_Right_Left()
+{
+
+    for(int i = colum; i < colum+3 ;i++)
+    {
+        if (matrix[temprow][colum-1] != matrix[temprow][i] || i == 7 ) break;
+        else
+            flagWinner++;
+    }
+                  
+    for(int i = colum-2; i > colum-5 ;i--)
+    {
+        if (matrix[temprow][colum-1] != matrix[temprow][i]  || i == -1) break;
+        else
+            flagWinner++;
+    }
+    Winner();
+
+}
+
+
+// Declares the winner.
 void Winner()
 {
-    if(flagWinner == 3)
+
+    if(flagWinner >= 3)
     {
         printMatrix();
         printf("Player %c wins!", playerFlag);
@@ -240,6 +264,5 @@ void Winner()
     else
     {
         flagWinner = 0;
-    }
-    
+    } 
 }

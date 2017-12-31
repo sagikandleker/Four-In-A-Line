@@ -41,3 +41,8 @@ int Stack_Full(Stack* s)
     else
         return 0;
 }
+
+int Stack_Size(Stack* s)
+{
+    return (s->size);
+}

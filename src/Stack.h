@@ -11,3 +11,4 @@ int Stack_Top(Stack *S);
 void Stack_Push(Stack *S, int d);
 void Stack_Pop(Stack *S);
 int Stack_Full(Stack* s);
+int Stack_Size(Stack* s);
